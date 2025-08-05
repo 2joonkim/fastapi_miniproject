@@ -12,6 +12,7 @@ app.add_middleware(QueryMonitorMiddleware)
 # 라우터 등록
 app.include_router(user.router, prefix="/api/v1", tags=["users"])
 
+
 @app.on_event("startup")
 async def startup_event():
     await init_db()

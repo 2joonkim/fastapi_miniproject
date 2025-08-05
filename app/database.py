@@ -8,11 +8,11 @@ TORTOISE_ORM = {
     "apps": {
         "models": {
             "models": [
-                "app.models.user", 
-                "app.models.post", 
-                "app.models.comment", 
-                "app.models.profile", 
-                "aerich.models"
+                "app.models.user",
+                "app.models.post",
+                "app.models.comment",
+                "app.models.profile",
+                "aerich.models",
             ],
             "default_connection": "default",
         },
