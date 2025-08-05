@@ -49,11 +49,21 @@ prod-down:
 prod-logs:
 	docker-compose logs -f
 
-# 데이터베이스 관련
+# 데이터베이스 관련 (Docker 컨테이너 내에서 실행)
 db-migrate:
-	uv run aerich migrate
+	docker-compose -f docker-compose.dev.yml exec app uv run aerich migrate --name "$(name)"
 	
 db-upgrade:
+	docker-compose -f docker-compose.dev.yml exec app uv run aerich upgrade
+
+db-init:
+	docker-compose -f docker-compose.dev.yml exec app uv run aerich init-db
+
+# 로컬에서 실행 (PostgreSQL이 localhost에서 실행될 때)
+db-migrate-local:
+	uv run aerich migrate --name "$(name)"
+	
+db-upgrade-local:
 	uv run aerich upgrade
 
 # 전체 개발 환경 설정
