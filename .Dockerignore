@@ -1,0 +1,22 @@
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.git
+.gitignore
+README.md
+.env
+.venv
+
+# Testing and Code Quality
+.pytest_cache
+.ruff_cache
+.coverage
+htmlcov
+.tox
+.mypy_cache
+tests/
+
+# Development files
+.github/
+*.md

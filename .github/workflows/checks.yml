@@ -1,0 +1,89 @@
+name: Code Quality Checks
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_PASSWORD: ${{ secrets.PG_PASSWORD }}
+          POSTGRES_USER: ${{ secrets.PG_USER }}
+          POSTGRES_DB: ${{ secrets.PG_NAME }}
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install uv
+      uses: astral-sh/setup-uv@v4
+      with:
+        version: "latest"
+    
+    - name: Set up Python
+      run: uv python install 3.13
+    
+    - name: Install dependencies
+      run: |
+        uv sync --group dev
+    
+    - name: Test PostgreSQL connection
+      env:
+        PG_HOST: localhost
+        PG_PORT: 5432
+        PG_USER: ${{ secrets.PG_USER }}
+        PG_PASSWORD: ${{ secrets.PG_PASSWORD }}
+        PG_NAME: ${{ secrets.PG_NAME }}
+      run: |
+        uv run python -c "
+        import asyncpg
+        import asyncio
+        async def test_connection():
+            try:
+                conn = await asyncpg.connect(
+                    host='$PG_HOST',
+                    port=$PG_PORT,
+                    user='$PG_USER',
+                    password='$PG_PASSWORD',
+                    database='$PG_NAME'
+                )
+                await conn.close()
+                print('PostgreSQL connection successful!')
+            except Exception as e:
+                print(f'Connection failed: {e}')
+                exit(1)
+        asyncio.run(test_connection())
+        "
+    
+    - name: Run ruff linter
+      run: |
+        uv run ruff check .
+    
+    - name: Run ruff formatter check
+      run: |
+        uv run ruff format --check .
+    
+    - name: Run black formatter check
+      run: |
+        uv run black --check .
+    
+    - name: Run pytest
+      env:
+        DATABASE_URL: postgresql://${{ secrets.PG_USER }}:${{ secrets.PG_PASSWORD }}@localhost:5432/${{ secrets.PG_NAME }}
+        SECRET_KEY: ${{ secrets.SECRET_KEY }}
+        DEBUG: False
+      run: |
+        uv run pytest -v
